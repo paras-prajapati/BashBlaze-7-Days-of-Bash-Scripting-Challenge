@@ -3,7 +3,7 @@
 echo -e "Task 1: Comments  (#)Sign"
 # Comment define by (#)Sign
 # This script demonstrates various tasks in bash scripting.
-# Each task is separated by comments to explain its purpose.
+
 
 # Task 2: Echo
 echo
