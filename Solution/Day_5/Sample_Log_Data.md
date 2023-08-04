@@ -4,7 +4,7 @@
 
 Congratulations on reaching Day 5 of the 7-day Bash scripting challenge! To assist you in testing your log analyzer and report generator script, we have something below.
 
-## Create Your Own Data
+# Create Your Own Data
 
 Feeling adventurous? If you want to go beyond the provided sample data(which you won't find because i haven't uploaded it ), you can generate your own log data using the `log_generator.sh` script. This script allows you to create log files with custom log levels, error messages, and line counts.
 
