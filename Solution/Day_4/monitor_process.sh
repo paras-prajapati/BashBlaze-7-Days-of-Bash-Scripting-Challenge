@@ -1,47 +1,42 @@
 #!/bin/bash
 
-# Function to check if the specified process is running
+# Function to check if a process is running
 is_process_running() {
-    if pgrep -x "$1" >/dev/null; then
-        return 0
-    else
-        return 1
-    fi
+    pgrep -x "$process_name" > /dev/null 2>&1
 }
 
-# Function to restart the process using systemctl
+# Function to restart the process
 restart_process() {
-    local process_name="$1"
+    
     echo "Process $process_name is not running. Attempting to restart..."
 
     # Check if the user has the privilege to restart the process
-    if sudo systemctl restart "$process_name"; then
+    if sudo systemctl restart "$process_name"; then   # start process
         echo "Process $process_name restarted successfully."
     else
         echo "Failed to restart $process_name. Please check the process manually."
     fi
 }
-
-# Check if a process name is provided as an argument
+# Check if a process path is provided as a command-line argument
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <process_name>"
+    echo "Usage: $0 /path/to/your/process"
     exit 1
 fi
 
-process_name="$1"
+process_name="$1" # Input process path
 max_attempts=3
-attempt=1
+attempts=1
 
 # Loop to check and restart the process
-while [ $attempt -le $max_attempts ]; do
+while [ $attempts -le $max_attempts ]; do
     if is_process_running "$process_name"; then
         echo "Process $process_name is running."
     else
         restart_process "$process_name"
     fi
 
-    attempt=$((attempt + 1))
-    sleep 5  # Wait for 5 seconds before the next check
+     ((attempts++))
+    sleep 5 # Adjust the interval as needed
 done
 
 echo "Maximum restart attempts reached. Please check the process manually."

@@ -1,23 +1,49 @@
 #!/bin/bash
 
-# Part 1: File and Directory Exploration
-echo "Welcome to the Interactive File and Directory Explorer!"
+# Function to check if a process is running
+is_process_running() {
+    pgrep -x "$process_name" > /dev/null 2>&1
+}
 
-while true; do
-    # List all files and directories in the current path
-    echo "Files and Directories in the Current Path:"
-    ls -lh
+# Function to restart the process using systemctl
+restart_process() {
 
-    # Part 2: Character Counting
-    read -p "Enter a line of text (Press Enter without text to exit): " input
+    echo "Process $process_name is not running. Attempting to restart..."
 
-    # Exit if the user enters an empty string
-    if [ -z "$input" ]; then
-        echo "Exiting the Interactive Explorer. Goodbye!"
-        break
+    # Check if the user has the privilege to restart the process
+    if sudo systemctl start "$process_name"; then # process name
+        echo "Process $process_name restarted successfully."
+    else
+        echo "Failed to restart $process_name. Please check the process manually."
+    fi
+}
+
+# Check if a process name is provided as a command-line argument
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 /name/to/your/process"
+    exit 1
+fi
+
+
+process_name="$1" # Input process path
+max_attempts=3
+attempts=1
+
+
+
+# Loop to check and restart the process
+while [ $attempts -le $max_attempts ]; do
+    if is_process_running "$process_name"; then
+        echo "Process $process_name is running."
+    else
+        restart_process "$process_name"
     fi
 
-    # Calculate and print the character count for the input line
-    char_count=$(echo -n "$input" | wc -m)
-    echo "Character Count: $char_count"
+     ((attempts++))
+    sleep 5  # Wait for 5 seconds before the next check
 done
+
+
+if ((attempts == max_attempts)); then
+     echo "Maximum restart attempts reached. Please check the process manually."
+fi

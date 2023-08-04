@@ -1,22 +1,34 @@
 #!/bin/bash
 
+# Function to display menu
+show_menu() {
+    clear
+    echo "**Main Menu**"
+    echo "---- Monitoring Metrics Script ----"
+    echo "1. View System Metrics"
+    echo "2. Monitor a Specific Service"
+    echo "3. Exit"
+    echo "================================="
+}
+
 # Function to display system metrics (CPU, memory, disk space)
-function view_system_metrics() {
+show_system_metrics() {
     echo "---- System Metrics ----"
-    # Fetch CPU usage using `top` command and extract the value using awk
+    # show CPU usage using `top` command and extract the value using awk
     cpu_usage=$(top -bn 1 | grep '%Cpu' | awk '{print $2}')
-    # Fetch memory usage using `free` command and extract the value using awk
+    # show memory usage using `free` command and extract the value using awk
     mem_usage=$(free | grep Mem | awk '{printf("%.1f", $3/$2 * 100)}')
-    # Fetch disk space usage using `df` command and extract the value using awk
+    # show disk space usage using `df` command and extract the value using awk
     disk_usage=$(df -h / | tail -1 | awk '{print $5}')
     
     echo "CPU Usage:  $cpu_usage%   Mem Usage:  $mem_usage%   Disk Space:  $disk_usage"
 }
-
 # Function to monitor a specific service
-function monitor_service() {
+monitor_service() {
     echo "---- Monitor a Specific Service ----"
     read -p "Enter the name of the service to monitor: " service_name
+    echo
+    echo -e "---- $service_name Status ----"
 
     # Check if the service is running using `systemctl` command
     if systemctl is-active --quiet $service_name; then
@@ -34,16 +46,13 @@ function monitor_service() {
 
 # Main loop for continuous monitoring
 while true; do
-    echo "---- Monitoring Metrics Script ----"
-    echo "1. View System Metrics"
-    echo "2. Monitor a Specific Service"
-    echo "3. Exit"
-
+    show_menu
+    
     read -p "Enter your choice (1, 2, or 3): " choice
 
     case $choice in
         1)
-            view_system_metrics
+            show_system_metrics
             ;;
         2)
             monitor_service
@@ -56,7 +65,9 @@ while true; do
             echo "Error: Invalid option. Please choose a valid option (1, 2, or 3)."
             ;;
     esac
-
-    # Sleep for 5 seconds before displaying the menu again
-    sleep 5
+      
+    sleep 5  # Interval for 5 seconds before displaying the menu again
+    
+    read -p "Press [Enter] to continue..."
 done
+   
