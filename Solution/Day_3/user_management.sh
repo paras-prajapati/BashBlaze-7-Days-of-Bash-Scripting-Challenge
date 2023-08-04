@@ -44,7 +44,7 @@ delete_account() {
 # Password reset user account
 reset_password() {
         read -p "Enter the username to reset the password: " reset_username
-           # Check if username exists
+        # Check if username exists
 	if ! id $reset_username &> /dev/null; then
 	     echo "Error: Username '$reset_username' does not exist."
 	     exit 1 
