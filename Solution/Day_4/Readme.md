@@ -21,11 +21,11 @@ Options
 
 Upon executing the script, you will be presented with a menu displaying various monitoring options:
 
-Show the current CPU usage
-Show the current memory usage
-Show the current root disk usage
-Monitor a specific service
-Exit
+-Show the current CPU usage
+-Show the current memory usage
+-Show the current root disk usage
+-Monitor a specific service
+-Exit
 
 
 A "Monitoring Metrics Script with Sleep Mechanism" refers to a script that periodically collects and monitors various metrics from a system or application and includes a "sleep" mechanism to control the intervals between metric collections. 
