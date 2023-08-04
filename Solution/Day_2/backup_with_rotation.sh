@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Check if a directory path is provided as a command-line argument
+# Check if a directory path is provided as a commandline argument
 if [ $# -eq 0 ]; then
     echo "Usage: $0 /path/to/source_directory"
     exit 1
