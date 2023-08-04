@@ -1,4 +1,4 @@
-=======================================
+====================================
 
 Monitoring Metrics Script with Sleep Mechanism
 This Bash script is designed to provide monitoring metrics for CPU usage, memory usage, and disk usage. It also offers the ability to monitor a specific service and restart it if necessary.
