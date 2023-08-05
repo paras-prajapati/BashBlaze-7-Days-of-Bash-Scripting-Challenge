@@ -1,7 +1,5 @@
-#!/bin/bash
 
-# Input
-# Check if a log-file path is provided as a command-line argument
+# Step 1: Input Check if a log-file path is provided as a command-line argument
 if [ $# -eq 0 ]; then
     echo "Usage: $0 /path/to/source_directory"
     exit 1
@@ -15,36 +13,54 @@ if [ ! -f "$log_file" ]; then
     exit 1
 fi
 
-# Summary Report
+#  Count the total number of lines 
+total_lines=$(wc -l < "$log_file")
 
-date_of_analysis=$(date '+%Y-%m-%d_%H-%M-%S') #Date of analysis
+# Step 2: Error Count total error count (identified by the keyword "ERROR\|Failed") 
+error_count=$(grep -c -i "ERROR\|Failed" "$log_file")
 
-log_file_name=$(basename "$log_file") #Log file name
+# Step 3: Critical Events Search for keyword "CRITICAL" and store them in an array
+mapfile -t critical_events < <(grep -n -i "CRITICAL" "$log_file")
 
-summary_file="summary_report_${log_file_name%.*}.txt"  #summary file
+# Step 4: Top 5 Error Messages 
+declare -A error_messages   # Initialize associative arrays
+while IFS= read -r line; do
+    # Use awk to extract the error message 
+    error_msg=$(awk '{for (i=3; i<=NF; i++) printf $i " "; print ""}' <<< "$line")
+    ((error_messages["$error_msg"]++))
+done < <(grep -i "ERROR\|Failed" "$log_file")
 
-total_lines=$(wc -l < "$log_file") #Total lines processed
+# Sort the error messages by occurrence count 
+sorted_error_messages=$(for key in "${!error_messages[@]}"; do
+    echo "${error_messages[$key]} $key"
+done | sort -rn | head -n 5)
 
-error_count=$(grep -c -i "ERROR\|Failed" "$log_file") #Error Count
+# Step 5: Summary Report
 
-critical_events=$(grep -n -i "CRITICAL" "$log_file") #Critical Events
+summary_report="log_summary_$(date +%Y-%m-%d).txt"
+{
+    echo
+    echo "-------------Log Analyzer Report-------------"
+    echo
+    echo -e "Date of analysis: $(date)"
+    echo -e "Log file name: $log_file"
+    echo -e "Total lines processed: $total_lines"
+    echo -e "Total error count: $error_count"
+    echo -e "\nTop 5 error messages with their occurrence count:"
+    echo
+    echo -e "$sorted_error_messages"
 
-top_errors=$(grep -i "ERROR\|Failed" "$log_file" | awk '{print $0}' | sort | uniq -c | sort -nr | head -n 5) #Top Error Messages
+    echo -e "\nList of critical events with line numbers:"
+    echo
+    for event in "${critical_events[@]}"; do
+        echo "$event"
+    done
+} > "$summary_report"
 
-# Generate the summary report
-echo "Date of analysis: $date_of_analysis" > "$summary_file"
-echo "Log file name: $log_file_name" >> "$summary_file"
-echo "Total lines processed: $total_lines" >> "$summary_file"
-echo "Total error count: $error_count" >> "$summary_file"
-echo -e "\nTop 5 error messages:" >> "$summary_file"
-echo "$top_errors" >> "$summary_file"
-echo -e "\nList of critical events with line numbers:" >> "$summary_file"
-echo "$critical_events" >> "$summary_file"
+echo "Analysis complete. Summary report generated: $summary_report"
 
-echo "Analysis complete. Summary report saved to: $summary_file"
-
-#Optional Enhancement save log file in that 
+# Step 6: Optional Enhancement save log file in folder
  designated_directory="archive"
  mkdir -p "$designated_directory"
  mv "$log_file" "$designated_directory/"
-
+echo "Log file archived to: $designated_directory"
