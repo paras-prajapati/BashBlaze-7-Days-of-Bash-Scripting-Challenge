@@ -1,18 +1,19 @@
 
 -------------Log Analyzer Report-------------
 
-Date of analysis: Saturday 05 August 2023 02:08:01 PM IST
+Date of analysis: Saturday 05 August 2023 04:30:44 PM IST
 Log file name: logfile.log
 Total lines processed: 100
 Total error count: 21
 
 Top 5 error messages with their occurrence count:
 
-1 [ERROR] Segmentation fault - 440 
-1 [ERROR] Segmentation fault - 14531 
-1 [ERROR] Out of memory - 8286 
-1 [ERROR] Out of memory - 18351 
-1 [ERROR] Out of memory - 11148 
+      7 Invalid input 
+      7 Failed to connect 
+      3 Out of memory 
+      2 Segmentation fault 
+      2 Disk full 
+
 
 List of critical events with line numbers:
 
