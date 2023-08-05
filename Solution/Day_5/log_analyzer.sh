@@ -23,18 +23,7 @@ error_count=$(grep -c -i "ERROR\|Failed" "$log_file")
 mapfile -t critical_events < <(grep -n -i "CRITICAL" "$log_file")
 
 # Step 4: Top 5 Error Messages 
-declare -A error_messages   # Initialize associative arrays
-while IFS= read -r line; do
-    # Use awk to extract the error message 
-    error_msg=$(awk '{for (i=3; i<=NF; i++) printf $i " "; print ""}' <<< "$line")
-    ((error_messages["$error_msg"]++))
-done < <(grep -i "ERROR\|Failed" "$log_file")
-
-# Sort the error messages by occurrence count 
-sorted_error_messages=$(for key in "${!error_messages[@]}"; do
-    echo "${error_messages[$key]} $key"
-done | sort -rn | head -n 5)
-
+top_error=`cat $log_file | awk -F'] |- ' '{print $2}' | sort | uniq -c | sort -nr | head -n 6 | tail -n 5`
 # Step 5: Summary Report
 
 summary_report="log_summary_$(date +%Y-%m-%d).txt"
@@ -48,8 +37,8 @@ summary_report="log_summary_$(date +%Y-%m-%d).txt"
     echo -e "Total error count: $error_count"
     echo -e "\nTop 5 error messages with their occurrence count:"
     echo
-    echo -e "$sorted_error_messages"
-
+    echo -e "$top_error"
+    echo
     echo -e "\nList of critical events with line numbers:"
     echo
     for event in "${critical_events[@]}"; do
