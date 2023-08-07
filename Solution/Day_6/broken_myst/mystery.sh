@@ -1,43 +1,39 @@
 #!/bin/bash
 
-# Welcome to the Mysterious Script Challenge!
-# Your task is to unravel the mystery behind this script and understand what it does.
-# Once you've deciphered its objective, your mission is to improve the script by adding comments and explanations for clarity.
+# The Mysterious Script - Solution
 
-# DISCLAIMER: This script is purely fictional and does not perform any harmful actions.
-# It's designed to challenge your scripting skills and creativity.
+# This script takes an input file, applies a series of mysterious transformations, and saves the result in an output file.
 
-# The Mysterious Function
+# Function to Decrypt and Reverse Content
 mysterious_function() {
     local input_file="$1"
     local output_file="$2"
-    
-    # 
+
+    # Step 1: Decrypt the input file (ROT13 decryption)
     tr 'A-Za-z' 'N-ZA-Mn-za-m' < "$input_file" > "$output_file"
 
-    # 
+    # Step 2: Reverse the content of the output file
     rev "$output_file" > "reversed_temp.txt"
 
-    # 
+    # Step 3: Generate a random number between 1 and 10
     random_number=$(( ( RANDOM % 10 ) + 1 ))
 
-    # Mystery loop: 
+    # Step 4: Mystery loop - Reverse and Encrypt the content multiple times
     for (( i=0; i<$random_number; i++ )); do
-        # 
+        # Reverse the output file again
         rev "reversed_temp.txt" > "temp_rev.txt"
 
-        # 
+        # Encrypt the reversed content (ROT13 encryption)
         tr 'A-Za-z' 'N-ZA-Mn-za-m' < "temp_rev.txt" > "temp_enc.txt"
 
-        # 
+        # Swap the temporary files
         mv "temp_enc.txt" "reversed_temp.txt"
     done
 
-    # Clean up temporary files
+    # Step 5: Clean up temporary files
     rm "temp_rev.txt"
 
-    # The mystery continues...
-    # The script will continue with more operations that you need to figure out!
+    # The script does not perform any harmful actions. It is designed to challenge participants' scripting skills and creativity.
 }
 
 # Main Script Execution
@@ -60,5 +56,5 @@ fi
 # Call the mysterious function to begin the process
 mysterious_function "$input_file" "$output_file"
 
-# Display the mysterious output
+# Display the completion message
 echo "The mysterious process is complete. Check the '$output_file' for the result!"
