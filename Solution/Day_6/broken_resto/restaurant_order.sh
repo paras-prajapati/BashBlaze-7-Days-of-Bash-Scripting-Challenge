@@ -4,24 +4,22 @@
 function display_menu() {
     echo "Welcome to the Restaurant!"
     echo "Menu:"
-    # TODO: Read the menu from menu.txt and display item numbers and prices
-    # Format: 1. Burger - ₹120
-    #        2. Pizza - ₹250
-    #        3. Salad - ₹180
-    #        ...
+    while read -r line; do
+        item_number=$(echo "$line" | cut -d ',' -f 1)
+        item_name=$(echo "$line" | cut -d ',' -f 2)
+        item_price=$(echo "$line" | cut -d ',' -f 3)
+        echo "$item_number. $item_name - ₹$item_price"
+    done < menu.txt
 }
 
 # Function to calculate the total bill
 function calculate_total_bill() {
     local total=0
-    # TODO: Calculate the total bill based on the customer's order
-    # The order information will be stored in an array "order"
-    # The array format: order[<item_number>] = <quantity>
-    # Prices are available in the same format as the menu display
-    # Example: If the customer ordered 2 Burgers and 1 Salad, the array will be:
-    #          order[1]=2, order[3]=1
-    # The total bill should be the sum of (price * quantity) for each item in the order.
-    # Store the calculated total in the "total" variable.
+    for item_number in "${!order[@]}"; do
+        item_quantity=${order[$item_number]}
+        item_price=$(grep "^$item_number," menu.txt | cut -d ',' -f 3)
+        total=$((total + item_quantity * item_price))
+    done
     echo "$total"
 }
 
@@ -34,7 +32,8 @@ function handle_invalid_input() {
 display_menu
 
 # Ask for the customer's name
-# TODO: Ask the customer for their name and store it in a variable "customer_name"
+echo -n "Please enter your name: "
+read customer_name
 
 # Ask for the order
 echo "Please enter the item number and quantity (e.g., 1 2 for two Burgers):"
@@ -42,16 +41,20 @@ read -a input_order
 
 # Process the customer's order
 declare -A order
-for (( i=0; i<${#input_order[@]}; i+=2 )); do
+for ((i = 0; i < ${#input_order[@]}; i += 2)); do
     item_number="${input_order[i]}"
-    quantity="${input_order[i+1]}"
-    # TODO: Add the item number and quantity to the "order" array
+    quantity="${input_order[i + 1]}"
+    if [[ $item_number =~ ^[0-9]+$ && $quantity =~ ^[0-9]+$ ]]; then
+        order["$item_number"]="$quantity"
+    else
+        handle_invalid_input
+        exit 1
+    fi
 done
 
 # Calculate the total bill
 total_bill=$(calculate_total_bill)
 
 # Display the total bill with a personalized thank-you message
-# TODO: Display a thank-you message to the customer along with the total bill
-# The message format: "Thank you, <customer_name>! Your total bill is ₹<total_bill>."
+echo "Thank you, $customer_name! Your total bill is ₹$total_bill."
 
