@@ -1,98 +1,177 @@
 #!/bin/bash
 
-# display usage information
-display_usage() {
-    echo "Usage: $0 [OPTIONS]"
-    echo "Options:"
-    echo "  -c, --create     Create a new user account"
-    echo "  -d, --delete     Delete an existing user account"
-    echo "  -r, --reset      Reset the password of an existing user account"
-    echo "  -l, --list       List all user accounts"
-    echo "  -h, --help       Display this help message"
+usernameExists () {
+	# Checks if a user ($1) already exists in the system
+	id $1 >& /dev/null
 }
 
-# create a new user account
-create_account() {
-    read -p "Enter new username: " new_username
-
-    # Check if username already exists
-    if id "$new_username" &>/dev/null; then
-        echo "Error: Username '$new_username' already exists. Please choose a different username."
-        exit 1
-    fi
-    sudo useradd -m -s /bin/bash "$new_username" &> /dev/null 
-	read -s -p "Enter the password for '$new_username': " new_password
-	echo "$new_username:$new_password" | sudo chpasswd
-	echo "User account '$new_username' created successfully"
-
-}
-
-# delete an existing user account
-delete_account() {
-    read -p "Enter username to delete: " del_username
-
-    # Check if username exists
-    if ! id "$del_username" &>/dev/null; then
-        echo "Error: Username '$del_username' does not exist.Please enter a valid username."
-        exit 1
-    fi
-
-    sudo userdel -r "$del_username"
-    echo "User account '$del_username' deleted successfully."
-}
-
-# Password reset user account
-reset_password() {
-        read -p "Enter the username to reset the password: " reset_username
-        # Check if username exists
-	if ! id $reset_username &> /dev/null; then
-	     echo "Error: Username '$reset_username' does not exist."
-	     exit 1 
+createUser() {
+	# Creates a new user if not already present in the system
+	# The user's home directory is created by default and it uses bash as default shell.
+	read -p "Enter new username:" username
+	if usernameExists $username; then
+		
+		echo "Error: Username '$username' already exists. Please choose a different username."
+		exit 1
 	fi
-	read -sp "Enter the new password for '$reset_username': " new_password
-	echo "$reset_username:$new_password" | sudo chpasswd
-	echo " Password reset successfully for '$reset_username'"
-	echo "Password for user '$reset_username' reset successfully."
+	read -sp "Enter a password:" password
+	echo ""
+	sudo useradd -m -s /bin/bash $username
+	if [[ $? -ne 0 ]]; then
+                echo "There was a error while trying to create the user."
+		exit 1
+        fi
+	echo "$username:$password" | sudo chpasswd
+	if [[ $? -eq 0 ]]; then
+		echo "User account '$username' created successfully."
+	else
+		echo "There was a error while assigning password to the user."
+		exit 1
+	fi
 }
 
-# list all user accounts and their details
-list_accounts() {
-    echo "User accounts and details:"
-    cat /etc/passwd | awk -F: '{ print "- " $1 " (UID: " $3 ")" }'
-    
-    # Displaying more detailed information about user accounts (e.g., home directory, shell, etc.).
-    #cat /etc/passwd | awk -F: '{print "-" "Username: " $1, "UID: " $3, "Home: " $6, "Shell: " $7}'
+deleteUser() {
+	# Delete's user account from the system along with its home directory
+	read -p "Enter username:" username
+	if ! usernameExists $username; then
+	
+		 echo "Error: Username '$username' does not exist.Please enter a valid username."
+		exit 1
+	fi
+	sudo userdel -r $username >& /dev/null
+	if [[ $? -eq 0 ]]; then
+		echo "User account '$username' deleted successfully."
+	else
+		echo "There was a error while trying to delete '$username' account."
+		exit 1
+	fi
 }
 
-# script execution
+resetPassword() {
+	# Reset's a valid user's password
+	read -p "Enter username:" username
+        if ! usernameExists $username; then
+                echo "User '$username' does not exist. lease enter a valid username."
+                exit 1
+        fi
+        read -sp "Enter a password:" password
+        echo ""
+        echo "$username:$password" | sudo chpasswd
+        if [[ $? -eq 0 ]]; then
+                echo "Password Changed for '$username'"
+        else
+                echo "There was a error while trying to change the password of '$username'."
+		exit 1
+	fi
+}
 
-if [ $# -eq 0 ]; then
-    display_usage
-    exit 1
+listUsers() {
+	# Lists down the users, UIDs, Home Directory, and default shell
+	awk -F":" 'BEGIN{print "USER" " " "UID" " " "HOME" " " "SHELL"}{print $1,$3,$6,$7}' /etc/passwd | column -t
+}
+
+showHelp() {
+	# Shows the options available in the script
+	echo "Usage: ./user_management.sh [Option]"
+	echo "Options:"
+	echo "-c, --create    Create a new user account (requires sudo permission)"
+	echo "-d, --delete    Delete a user account (requires sudo permission)"
+	echo "-r, --reset     Reset an existing user's password (requires sudo permission)"
+	echo "-l, --list      List all user accounts present in the system."
+	echo "-u, --update    Update user account"
+	echo "-h, --help      Display help page"
+
+}
+
+updateUser() {
+	echo "----- User Modification Menu -----"
+    	echo "1. Change user's login name"
+    	echo "2. Change user's home directory"
+    	echo "3. Change user's default shell"
+    	echo "4. Exit"
+	read -p "Choose option:" option
+	case $option in
+		7)
+			exit;;
+		1)
+			# Change username of a valid user account
+			read -p "Enter your old username:" username
+			if ! usernameExists $username; then
+				echo "$username user does not exits"
+				exit 1
+			fi
+			read -p "Enter your new username:" newUsername
+			sudo usermod -l $newUsername $username
+			if [[ $? -ne 0 ]];then
+				echo "An error occurred while trying to change login name"
+				exit 1
+			else
+				echo "username changed from $username to $newUsername"
+			fi
+			;;
+		2)
+			# Change home directory of a valid user account
+			read -p "Enter your username:" username
+                        if ! usernameExists $username; then
+                                echo "$username user does not exits"
+                                exit 1
+                        fi
+			read -p "Enter path of new home directory:" homedirectory
+			sudo usermod -m -d "$homedirectory" "$username"
+			;;
+		3)
+			# Change default shell of a user account
+            		read -p "Enter the username:" username
+			if ! usernameExists $username; then
+                                echo "$username user does not exits"
+                                exit 1
+                        fi
+            		read -p "Enter new shell path:" newShell
+			if [[ ! -f $newShell  ]]; then
+				echo "Shell not found in path, please provide a valid shell path"
+				exit 1
+			fi
+			sudo usermod -s "$newShell" "$username"
+			if [[ $? -ne 0 ]];then
+				echo "An error occurred while changing default shell of $username"
+				exit 1
+			else
+				echo "Default shell of $username changed successfully to $newShell"
+			fi
+			;;
+		
+	esac
+}
+
+# Start of Script
+
+# If no arguments, show help page
+if [[ $# -eq 0 ]];then
+	showHelp
+	exit 0
 fi
 
-case "$1" in
-    -c|--create)
-        create_account
-        ;;
-    -d|--delete)
-        delete_account
-        ;;
-    -r|--reset)
-        reset_password
-        ;;
-    -l|--list)
-        list_accounts
-        ;;
-    -h|--help)
-        display_usage
-        ;;
-     *)
-        echo "Invalid option: $1"
-        display_usage
-        exit 1
-        ;;
-   esac
-
-exit 0
-
+OPTION=$1
+case $OPTION in
+	-c | --create)
+		createUser
+		;;
+	-d | --delete)
+		deleteUser
+		;;
+	-l | --list)
+		listUsers
+		;;
+	-r | --reset)
+		resetPassword
+		;;
+	-h | --help)
+		showHelp
+		exit;;
+	-u | --update)
+		updateUser
+		;;
+	*)
+		echo "Invalid option. Check the help page for valid options"
+		;;
+esac
